@@ -1,0 +1,25 @@
+{
+  "name": "employee-tracker",
+  "version": "1.0.0",
+  "description": "A command-line application that allows the user to: Add departments, roles, employees View departments, roles, employees Update employee roles",
+  "main": "serve.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/malex19889/Employee-Tracker.git"
+  },
+  "author": "Michael A. Willingham",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/malex19889/Employee-Tracker/issues"
+  },
+  "homepage": "https://github.com/malex19889/Employee-Tracker#readme",
+  "dependencies": {
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "inquirer": "^7.3.3",
+    "mysql": "^2.18.1"
+  }
+}

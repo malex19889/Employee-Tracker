@@ -1,6 +1,12 @@
 const mysql = require("mysql");
 const inquirer = require("inquirer");
+const consoleTable = require("console.table");
 require("dotenv").config();
+
+const managersArr = [];
+const rolesArr = [];
+const employeesArr = [];
+const deptsArr = [];
 
 var connection = mysql.createConnection({
   host: "localhost",
@@ -13,13 +19,14 @@ var connection = mysql.createConnection({
 connection.connect(function (err) {
   if (err) throw err;
   console.log("connected as id " + connection.threadId);
+  updateArrs();
    init();
+   
 });
 
 async function init() {
   try {
     inquirer.prompt(startOptions).then(function (data) {
-    
     switch (data.options) {
       case "Add Department":
         console.log("adding department");
@@ -65,10 +72,7 @@ async function init() {
 
       case "Update employee":
         console.log("adding employee");
-        inquirer.prompt(employeeAdd).then(function (data) {
-          createEmployee(data);
-          init();
-        });
+          updateEmployee();
         break;
 
       default:
@@ -84,19 +88,20 @@ async function init() {
 }
 
 function createEmployee(data) {
+  empRoleId = parseInt(data.roleId)
   connection.query(
     "INSERT INTO employee SET ?",
     // table elems
     {
       id: data.id,
-      first_name: data.firstName,
-      last_name: data.lastName,
-      role_id: data.roleId,
-      manager_id: data.managerId,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      roleId: empRoleId,
+      managerId: data.managerId,
     },
     function (err, res) {
       if (err) console.log(err);
-      console.log(res);
+      console.table(res);
       init();
     }
   );
@@ -177,6 +182,54 @@ async function viewDB() {
  
 }
 
+function updateEmployee() {
+  inquirer.prompt(employeeUpdate).then(function (data) {
+    let empId = parseInt(data.update);
+    let newRole = parseInt(data.dpt) ;
+   connection.query("UPDATE employee SET ? WHERE id =?",
+   [
+     {
+       roleId: newRole
+     },
+     empId
+   ], function (err, res) {
+     if (err) console.log(err);
+     init();
+   }); 
+  console.log("Updating ....\n");
+  }
+  )}
+
+async function updateArrs(){
+  try {
+   await connection.query("SELECT id, firstName, lastName FROM employee", function (err, res) {
+    if (err) console.log(err);
+    for (let i=0; i < res.length; i++){
+      employeesArr.push(res[i].id+" "+res[i].firstName+" "+res[i].lastName);
+  }
+    //  console.log(employeesArr)
+  }); 
+   await connection.query("SELECT * FROM department", function (err, res) {
+    if (err) console.log(err);
+    for (let i=0; i < res.length; i++){
+      deptsArr.push(res[i]);
+  }
+  });
+  
+ await connection.query("SELECT * FROM role", function (err, res) {
+    if (err) console.log(err);
+    for (let i=0; i < res.length; i++){
+      rolesArr.push(res[i].id+" "+res[i].title);
+  }
+  // console.log(deptsArr)
+ 
+  });
+  } catch (err) {
+    if(err) throw err;
+  }
+ 
+}
+
 // all inquirer prompts
 const startOptions = [
   {
@@ -205,13 +258,19 @@ const viewOptions = [
   },
 ];
 
-const viewOptions = [
+const employeeUpdate = [
   {
     type: "list",
     name: "update",
     message: "What employee would you like to update?",
-    choices: ["departments", "employees", "roles","Return to main"],
+    choices: employeesArr
   },
+  {
+    type: "list",
+    name: "dpt",
+    message: "What role do you want to transfer to?",
+    choices: rolesArr
+  }
 ];
 
 const employeeAdd = [
@@ -231,9 +290,10 @@ const employeeAdd = [
     message: "Please enter employees last name",
   },
   {
-    type: "input",
+    type: "list",
     name: "roleId",
-    message: "Please enter employees role id",
+    message: "Please chose a role",
+    choices: rolesArr
   },
   {
     type: "input",

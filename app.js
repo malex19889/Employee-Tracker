@@ -20,75 +20,73 @@ connection.connect(function (err) {
   if (err) throw err;
   console.log("connected as id " + connection.threadId);
   updateArrs();
-   init();
-   
+  init();
 });
 
 async function init() {
   try {
     inquirer.prompt(startOptions).then(function (data) {
-    switch (data.options) {
-      case "Add Department":
-        console.log("adding department");
-        inquirer.prompt(departmentAdd).then(function (data) {
-          createDepartment(data);
-        });
-        break;
+      switch (data.options) {
+        case "Add Department":
+          console.log("adding department");
+          inquirer.prompt(departmentAdd).then(function (data) {
+            createDepartment(data);
+          });
+          break;
 
-      case "Add Role":
-        console.log("adding role");
-        inquirer.prompt(roleAdd).then(function (data) {
-          createRole(data);
-        });
-         
-        break;
+        case "Add Role":
+          console.log("adding role");
+          inquirer.prompt(roleAdd).then(function (data) {
+            createRole(data);
+          });
 
-      case "Add Employee":
-        console.log("adding employee");
-        inquirer.prompt(employeeAdd).then(function (data) {
-          createEmployee(data);
-        });
-        break;
+          break;
 
-      case "View Database":
-        viewDB();
-        break;
+        case "Add Employee":
+          console.log("adding employee");
+          inquirer.prompt(employeeAdd).then(function (data) {
+            createEmployee(data);
+          });
+          break;
 
-      case "View roles":
-        console.log("adding role");
-        inquirer.prompt(roleAdd).then(function (data) {
-          createRole(data);
-          init();
-        });
-        break;
+        case "View Database":
+          viewDB();
+          break;
 
-      case "View employees":
-        console.log("adding employee");
-        inquirer.prompt(employeeAdd).then(function (data) {
-          createEmployee(data);
-          init();
-        });
-        break;
+        case "View roles":
+          console.log("adding role");
+          inquirer.prompt(roleAdd).then(function (data) {
+            createRole(data);
+            init();
+          });
+          break;
 
-      case "Update employee":
-        console.log("adding employee");
+        case "View employees":
+          console.log("adding employee");
+          inquirer.prompt(employeeAdd).then(function (data) {
+            createEmployee(data);
+            init();
+          });
+          break;
+
+        case "Update employee":
+          console.log("adding employee");
           updateEmployee();
-        break;
+          break;
 
-      default:
-        // close sql connection
-        connection.end();
-        break;
-    }
-  });
+        default:
+          // close sql connection
+          connection.end();
+          break;
+      }
+    });
   } catch (error) {
     if (error) throw error;
   }
-  
 }
 
 function createEmployee(data) {
-  empRoleId = parseInt(data.roleId)
+  empRoleId = parseInt(data.roleId);
   connection.query(
     "INSERT INTO employee SET ?",
     // table elems
@@ -102,6 +100,7 @@ function createEmployee(data) {
     function (err, res) {
       if (err) console.log(err);
       console.table(res);
+      updateArrs();
       init();
     }
   );
@@ -117,8 +116,9 @@ function createDepartment(data) {
     },
     function (err, res) {
       if (err) console.log(err);
-      console.log(res);
-       init();
+      console.table(res);
+      updateArrs();
+      init();
     }
   );
 }
@@ -135,8 +135,9 @@ function createRole(data) {
     },
     function (err, res) {
       if (err) console.log(err);
-      console.log(res);
-       init();
+      console.table(res);
+      updateArrs();
+      init();
     }
   );
 }
@@ -144,90 +145,93 @@ function createRole(data) {
 async function viewDB() {
   try {
     inquirer.prompt(viewOptions).then(function (data) {
-       switch (data.view) {
-    case "departments":
-      connection.query("SELECT * FROM department", function (err, res) {
-        if (err) console.log(err);
-        console.table(res);
-        init();
-      });
-      break;  
+      switch (data.view) {
+        case "departments":
+          connection.query("SELECT * FROM department", function (err, res) {
+            if (err) console.log(err);
+            console.table(res);
+            init();
+          });
+          break;
 
-    case "employees":
-      connection.query("SELECT * FROM employee", function (err, res) {
-        if (err) console.log(err);
-        console.table(res);
-        init();
-      });
-      break;
+        case "employees":
+          connection.query("SELECT * FROM employee", function (err, res) {
+            if (err) console.log(err);
+            console.table(res);
+            init();
+          });
+          break;
 
-    case "roles":
-      connection.query("SELECT * FROM role", function (err, res) {
-        if (err) console.log(err);
-        console.table(res);
+        case "roles":
+          connection.query("SELECT * FROM role", function (err, res) {
+            if (err) console.log(err);
+            console.table(res);
+            init();
+          });
+          break;
+
+        default:
           init();
-        
-      });
-      break;
-
-    default:
-       init();
-      break;
-  }
+          break;
+      }
     });
-    
   } catch (err) {
     if (err) throw error;
   }
- 
 }
 
 function updateEmployee() {
   inquirer.prompt(employeeUpdate).then(function (data) {
     let empId = parseInt(data.update);
-    let newRole = parseInt(data.dpt) ;
-   connection.query("UPDATE employee SET ? WHERE id =?",
-   [
-     {
-       roleId: newRole
-     },
-     empId
-   ], function (err, res) {
-     if (err) console.log(err);
-     init();
-   }); 
-  console.log("Updating ....\n");
-  }
-  )}
+    let newRole = parseInt(data.dpt);
+    connection.query(
+      "UPDATE employee SET ? WHERE id =?",
+      [
+        {
+          roleId: newRole,
+        },
+        empId,
+      ],
+      function (err, res) {
+        if (err) console.log(err);
+        init();
+      }
+    );
+    console.log("Updating ....\n");
+  });
+}
 
-async function updateArrs(){
+async function updateArrs() {
   try {
-   await connection.query("SELECT id, firstName, lastName FROM employee", function (err, res) {
-    if (err) console.log(err);
-    for (let i=0; i < res.length; i++){
-      employeesArr.push(res[i].id+" "+res[i].firstName+" "+res[i].lastName);
-  }
-    //  console.log(employeesArr)
-  }); 
-   await connection.query("SELECT * FROM department", function (err, res) {
-    if (err) console.log(err);
-    for (let i=0; i < res.length; i++){
-      deptsArr.push(res[i]);
-  }
-  });
-  
- await connection.query("SELECT * FROM role", function (err, res) {
-    if (err) console.log(err);
-    for (let i=0; i < res.length; i++){
-      rolesArr.push(res[i].id+" "+res[i].title);
-  }
-  // console.log(deptsArr)
- 
-  });
+    await connection.query(
+      "SELECT id, firstName, lastName FROM employee",
+      function (err, res) {
+        if (err) console.log(err);
+        for (let i = 0; i < res.length; i++) {
+          employeesArr.push(
+            res[i].id + " " + res[i].firstName + " " + res[i].lastName
+          );
+        }
+        //  console.log(employeesArr)
+      }
+    );
+    await connection.query("SELECT * FROM department", function (err, res) {
+      if (err) console.log(err);
+      for (let i = 0; i < res.length; i++) {
+        deptsArr.push(res[i]);
+      }
+    });
+
+    await connection.query("SELECT * FROM role", function (err, res) {
+      if (err) console.log(err);
+      for (let i = 0; i < res.length; i++) {
+        rolesArr.push(res[i].id + " " + res[i].title);
+      }
+      // console.log(deptsArr)
+    });
   } catch (err) {
-    if(err) throw err;
+    if (err) throw err;
   }
- 
 }
 
 // all inquirer prompts
@@ -241,8 +245,6 @@ const startOptions = [
       "Add Role",
       "Add Employee",
       "View Database",
-      "View roles",
-      "View employees",
       "Update employee",
       "Done",
     ],
@@ -254,7 +256,7 @@ const viewOptions = [
     type: "list",
     name: "view",
     message: "What would you like to view",
-    choices: ["departments", "employees", "roles","Return to main"],
+    choices: ["departments", "employees", "roles", "Return to main"],
   },
 ];
 
@@ -263,14 +265,14 @@ const employeeUpdate = [
     type: "list",
     name: "update",
     message: "What employee would you like to update?",
-    choices: employeesArr
+    choices: employeesArr,
   },
   {
     type: "list",
     name: "dpt",
     message: "What role do you want to transfer to?",
-    choices: rolesArr
-  }
+    choices: rolesArr,
+  },
 ];
 
 const employeeAdd = [
@@ -293,7 +295,7 @@ const employeeAdd = [
     type: "list",
     name: "roleId",
     message: "Please chose a role",
-    choices: rolesArr
+    choices: rolesArr,
   },
   {
     type: "input",
